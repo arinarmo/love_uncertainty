@@ -5,7 +5,7 @@ Plática para el Data Day 2017 por Adolfo Martínez.
 
 - Los slides en `slides.html`
 - El .Rmd en `slides.Rmd`
-- Ejemplo funcional de python en `ejemplo.py`
+- Ejemplo funcional de python en `ejemplo.ipynb`
 
 Referencias:
 - [*Bayesian Reasoning and Machine Learning*](http://web4.cs.ucl.ac.uk/staff/D.Barber/textbook/090310.pdf) - David Barber 
