@@ -1,0 +1,7 @@
+.idea
+data/
+*.pyc
+__pycache__
+
+.Rhistory
+.RData
