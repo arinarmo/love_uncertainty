@@ -7,6 +7,21 @@ Plática para el Data Day 2017 por Adolfo Martínez.
 - El .Rmd en `slides.Rmd`
 - Ejemplo funcional de python en `ejemplo.ipynb`
 
+### Cómo ver
+Clona el repositorio y abre en algún browser `slides_xaringan.html`
+
+### Cómo reconstruir el ejemplo
+Activa tu virtualenv o pyenv con python 3.5.2 y
+
+```{python}
+    pip install -r requirements.txt
+    jupyter notebook
+```
+Abre `ejemplo.ipynb` y corre todos los chunks
+
+### Cómo reconstruir la presentación
+Instala [xaringan](https://github.com/yihui/xaringan), abre `slides_xaringan.Rmd` en RStudio y ve a File -> Knit Document
+
 Referencias:
 - [*Bayesian Reasoning and Machine Learning*](http://web4.cs.ucl.ac.uk/staff/D.Barber/textbook/090310.pdf) - David Barber 
 - [*Bayesian Methods for Hackers*](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers) - Cameron Davidson-Pilon
