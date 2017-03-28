@@ -408,8 +408,8 @@ with model:
     obs = pm.Poisson("obs", lambda_i, observed=data)
     
     # predictive distributions:
-    pred1 = pm.Poisson("pred1", lambda1, observed=data)
-    pred2 = pm.Poisson("pred2", lambda2, observed=data)
+    pred1 = pm.Poisson("pred1", lambda1)
+    pred2 = pm.Poisson("pred2", lambda2)
   
 ```
 
