@@ -3,12 +3,12 @@
 
 Plática para el Data Day 2017 por Adolfo Martínez.
 
-- Los slides en `slides.html`
-- El .Rmd en `slides.Rmd`
+- Los slides en `slides_xaringan.html` o `slides.pdf`
+- El .Rmd en `slides_xaringan.Rmd`
 - Ejemplo funcional de python en `ejemplo.ipynb`
 
 ### Cómo ver
-Clona el repositorio y abre en algún browser `slides_xaringan.html`
+Clona el repositorio y abre en algún browser `slides_xaringan.html` o abrir el PDF: `slides.pdf`
 
 ### Cómo reconstruir el ejemplo
 Activa tu virtualenv o pyenv con python 3.5.2 y
@@ -21,6 +21,8 @@ Abre `ejemplo.ipynb` y corre todos los chunks
 
 ### Cómo reconstruir la presentación
 Instala [xaringan](https://github.com/yihui/xaringan), abre `slides_xaringan.Rmd` en RStudio y ve a File -> Knit Document
+
+Para construir el PDF, usar [decktape](https://github.com/astefanutti/decktape) con el comando remark
 
 Referencias:
 - [*Bayesian Reasoning and Machine Learning*](http://web4.cs.ucl.ac.uk/staff/D.Barber/textbook/090310.pdf) - David Barber 
