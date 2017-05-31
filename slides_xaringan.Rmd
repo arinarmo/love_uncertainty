@@ -2,10 +2,9 @@
 title: "Estadística Bayesiana y Programación Probabilística"
 subtitle: "O cómo dejé de preocuparme y aprendí a amar la incertidumbre"
 author: "Adolfo Martínez"
-date: "2017/03/28"
+date: "2017/05/31"
 output:
   xaringan::moon_reader:
-    css: ["default", "portada.css"]
     lib_dir: libs
     nature:
       ratio: '16:9'
@@ -114,7 +113,7 @@ class: middle, center, inverse
 ---
 ## Estadística Bayesiana
 
-Incorpora la **incertidumbre** subjetiva o **creencias inciales** como información previa a la inferencia. La **probabilidad** es una medida de incertidumbre, no una frecuencia
+Incorpora la **incertidumbre** subjetiva o **información incial** como información previa a la inferencia. La **probabilidad** es una medida de incertidumbre, no una frecuencia
 
 - Prueba (contraste) de hipótesis
 - Diseño de experimentos
@@ -128,7 +127,7 @@ Tiene una manera clara y bien fundamentada de asignar probabilidad a eventos ún
 
 <center> $$P(\theta|D) \propto P(D|\theta)P(\theta)$$ </center>
 
-* $P(\theta)$ se obtiene de las creencias iniciales (*a priori*)
+* $P(\theta)$ se obtiene de la información inicial (*a priori*)
 * De no existir, se pueden usar *a priori* no informativas
 
 ---
@@ -319,7 +318,48 @@ model {
 - Pensar cómo se pudieron haber **generado** los datos
 - Escoger **distribuciones** que representen dichos datos
 - Modelar **relaciones** entre variables (*e.g.* linealmente, árbol de decisión)
-- Modelar parámetros con distribuciones que representen las **creencias iniciales** adecuadamente
+- Modelar parámetros con distribuciones que representen la **información inicial* adecuadamente
+
+---
+## Modelo generativo de los datos
+- No es necesario representar la generación de manera precisa
+- No es necesario pensar en un proceso causal
+- El modelo generativo debe de ser capaz de generar datos similares a los que se tienen
+
+### Ya casi viene el ejemplo...
+
+---
+## Modelar relación entre variables
+- Escoger una relación de acuerdo a la complejidad del fenómeno
+- En caso de duda, escoger relaciones rígidas (al principio)
+- La relación entre variables dicta la complejidad del modelo
+
+### Ejemplo: Lineal
+
+$$ y | x  \sim N(\beta^T x, \sigma^2)$$
+
+### Ejemplo: Lineal con link logit
+
+$$ y | x \sim Bernoulli(sigmoid(\beta^T x)) $$
+
+$$ sigmoid(x) = (1 + e^x)^{-1} $$
+
+---
+## ¿Cómo Escoger Priors?
+Tres opciones:
+1. Buscar representar la información inicial de la manera más precisa posible
+2. Usar "no-informativas"
+3. Usar "débilmente-informativas"
+
+La elección de _prior_ también afecta la complejidad del modelo, en el sentido de que afecta su flexibilidad. 
+
+### Ejemplo: Coeficiente lineal
+$$ \beta \sim Cauchy(0, 2.5)$$
+
+### Ejemplo: Coeficiente lineal regularizado
+$$ \beta \sim Laplace(0, \sigma)$$
+
+Esto equivale a la regularización Lasso
 
 ---
 class: middle, center, inverse
@@ -329,12 +369,14 @@ class: middle, center, inverse
 ## Ejemplo: Cambio de Media
 - *Data*: Número de mensajes de texto recibidos cada día
 - ¿Existe un cambio súbito en esta variable?
+
 ```{r, echo=F, warning=F, message=F, fig.height=5, fig.align='center', fig.width=12, fig.align='center'}
 counts <- read.csv("data/txtdata.csv", header=F)
 names(counts) <- c("n")
 counts$t <- 1:nrow(counts)
 
 ggplot(counts, aes(x=t, y=n)) + geom_bar(stat="identity") + theme_minimal() + xlab("Día") + ylab("Mensajes recibidos")
+
 ```
 
 .footnote[
@@ -358,7 +400,9 @@ plot.dist.cont <- function(df, title="") {
 }
 data.frame(x=0:20, y=dpois(0:20, 5)) %>%
   plot.dist.disc("Distribución Poisson; lambda=5")
+
 ```
+
 - Como el parámetro $\lambda$ indica el promedio, la pregunta puede formularse cómo ¿Existe un cambio de lambda?
 - Podemos usar dos parámetros $\lambda_1$ y $\lambda_2$, para representar estos posibles dos estados
 - Lo único que nos falta es un parámetro $\tau$, el cual representa el día en el cuál ocurre el cambio
@@ -377,10 +421,12 @@ grid.arrange(
     ylim(c(0, 0.02)),
   ncol=2
 )
+
 ```
 
 - Escogimos una distribución exponencial para $\lambda_1$, $\lambda_2$, con (hiper)parámetro $\alpha$ positivo
 - La distribución *a priori* para $\tau$ es una discreta uniforme
+
 ---
 ## Ejemplo: Cambio de Media
 #### Modelado en PyMC3 (Parámetros)
@@ -490,6 +536,217 @@ grid.arrange(
     ylab("# samples") + xlab("")
 ```
 
+---
+class: middle, center, inverse
+## Pero sólo era una variable...
+## Otro ejemplo!
+---
+
+## Ejemplo: Cáncer de Mama
+*Data*: Features del núcleo de las células de un tumor de pecho, tomadas con una jeringa
+
+Objetivo: Clasificarlo como benigno o maligno
+![](resources/cells.png)
+
+---
+## Ejemplo: Cáncer de Mama
+Promedio, desviación estándar y "peor valor" de:
+- Radio
+- Textura
+- Perímetro
+- Área
+- Suavidad
+- Compacidad
+- Concavidad
+- Simetría
+- Estructura Fractal
+
+---
+## Ejemplo: Cáncer de Mama
+Como nuestra variable de respuesta tiene sólo dos clases, podemos usar una Bernoulli para representarla
+```{r, echo=F, warning=F, message=F, fig.height=6, fig.align='center', fig.width=12, fig.align='center'}
+cancer <- read.csv("data/cancer_data.csv", header=T)
+
+cancer %>% group_by(diagnosis) %>%
+  summarise(n = n()) %>%
+  ggplot(aes(x=diagnosis, y=n)) + geom_bar(stat="identity") + 
+  theme_minimal() + xlab("Diagnóstico") + ylab("n") + scale_x_discrete(labels=c("Benigno", "Maligno"))
+
+```
+
+---
+## Ejemplo: Cáncer de Mama
+Dado nuestro (mi) escaso conocimiento de cómo éstas variables son importantes para un diagnóstico de cáncer, escogemos un
+modelo lineal general con priors débilmente informativas.
+
+$$ y | x \sim Bernoulli(p) $$
+
+$$ p = (1 + e^{\beta^t x})^{-1} $$
+
+El prior en este caso es una Cauchy con escala 2.5
+
+```{r, echo=F, warning=F, message=F, fig.height=4, fig.align='center', fig.width=12, fig.align='center'}
+data_frame(x=-100:100/10, y=dcauchy(x, 0, 2.5)) %>%
+  ggplot(aes(x=x, y=y)) + geom_line() +
+  theme_minimal() +  xlab("x") + ylab("P(X=x)")  + scale_x_discrete(labels=c("Benigno", "Maligno"))
+```
+
+---
+## Ejemplo: Cáncer de Mama
+### Preprocesamiento
+```{python, echo=T, eval=F}
+import numpy as np
+import pymc3 as pm
+
+# Read
+data = pn.read_csv("../data/cancer.csv")
+
+# Remove malformed column
+data = data.drop("Unnamed: 32", axis=1)
+
+# Train and test
+np.random.seed(42)
+is_train = np.random.rand(len(data)) < 0.8
+train = data[is_train]
+
+```
+
+---
+## Ejemplo: Cáncer de Mama
+### Preprocesamiento
+```{python, echo=T, eval=F}
+# Standardize the predictors
+X = np.array(train.iloc[:, 2:])
+mX, sX = X.mean(axis=0), X.std(axis=0)
+scaled = (X - mX)/sX
+
+# Add bias term
+predictors = np.c_[np.ones(scaled.shape[0]), scaled]
+
+# Transform response to boolean
+y = np.array(train.diagnosis == "M")
+```
+
+---
+## Ejemplo: Cáncer de Mama
+### Modelo en PyMC3 e Inferencia
+```{python, echo=T, eval=F}
+n_predictors = predictors.shape[1]
+# Esto nos permitirá muestrear de la predictiva más adelante
+predictors = shared(predictors) 
+
+with pm.Model() as model:
+    beta = pm.Cauchy("beta", 0, 2.5, shape=n_predictors)
+    p = 1/(1 + tt.exp(tt.dot(predictors, beta)))
+    obs = pm.Bernoulli("obs", p, observed=y)
+    
+    step = pm.Metropolis()
+    trace = pm.sample(50000, step=step, random_seed=42)
+    burned = trace[40000:]
+```
+
+---
+## Ejemplo: Cáncer de Mama
+### Posteriores
+```{r, echo=F, warning=F, message=F, fig.height=6, fig.align='center', fig.width=12, fig.align='center'}
+library(readr)
+posteriores <- read_csv("data/cancer_posteriors.csv")
+posteriores_estimates <- colMeans(posteriores)
+posteriores %>%
+  gather() %>%
+  ggplot(aes(x=value)) + geom_histogram() + facet_wrap(~key) +
+  geom_vline(xintercept=0, linetype="dotted", color="red") +
+  theme_minimal() 
+```
+
+---
+## Ejemplo: Cáncer de Mama
+### Predicciones en testing
+```{python, echo=T, eval=F}
+# Standardize testing set
+X_test = np.array(test.iloc[:, 2:])
+scaled_test = (X_test - mX)/sX
+# Add bias
+predictors_test = np.c_[np.ones(scaled_test.shape[0]), scaled_test]
+
+# Set theano shared object to testing predictors and sample from the predictive distribution
+predictors.set_value(predictors_test)
+pred_samples = pm.sample_ppc(burned, model=model, samples=10000, progressbar=True)
+```
+
+```{r, echo=F, eval=T, warning=F, message=F}
+probs <- read.csv("data/cancer_probs.csv")
+probs$y <- (probs$y == "True")
+table(probs$y, probs$prob > 0.5)
+```
+
+---
+## Ejemplo: Cáncer de Mama
+### Importancia de la Incertidumbre
+Chequemos un par de casos específicos
+```{r, echo=F, eval=T, warning=F, message=F, fig.height=5, fig.align='center', fig.width=12}
+cases <- read.csv("data/cancer_predictives.csv",header=F)
+ggplot(cases, aes(x=V1)) + geom_histogram() + geom_vline(xintercept=0.5, linetype="dashed") +
+  xlab("p") + ylab("P(p)") +
+  theme_minimal() +
+  ggtitle(paste0("Realidad: B, Predicción: B, Prob. esperada: 0.3"))
+```
+
+---
+## Ejemplo: Cáncer de Mama
+### Importancia de la Incertidumbre
+```{r, echo=F, eval=T, warning=F, message=F, fig.height=5, fig.align='center', fig.width=12}
+cases <- read.csv("data/cancer_predictives.csv",header=F)
+ggplot(cases, aes(x=V2)) + geom_histogram() + geom_vline(xintercept=0.5, linetype="dashed") +
+  xlab("p") + ylab("P(p)") +
+  theme_minimal() +
+  ggtitle(paste0("Realidad: M, Predicción: B, Prob. esperada: 0.39"))
+```
+
+Con una incertidumbre así, ¿Confiarían en no tener cáncer?
+
+---
+## Ejemplo: Cáncer de Mama
+### Función de pérdida
+
+Una manera de resolver el problema anterior es especificando bien lás **pérdidas** o penalizaciones en las que incurre el modelo
+al predecir.
+
+Cuándo tomamos 0.5 como límite para predecir la clase positiva, estamos asumiendo (y suponiendo) tácitamente una matriz de pérdida como:
+
+$$
+L = 
+\begin{bmatrix}
+ 0 & 1 \\\\
+ 1 & 0
+\end{bmatrix}
+$$
+
+En nuestro caso en particular, una mejor matriz podría ser:
+
+$$
+L = 
+\begin{bmatrix}
+ 0 & 1 \\\\
+ 2 & 0
+\end{bmatrix}
+$$
+
+---
+## Ejemplo: Cáncer de Mama
+### Función de pérdida
+
+Al cambiar la matriz de pérdida, cambiamos la regla para predecir. En general, la clase óptima a predecir está dada por:
+
+$$argmin_l E_{L} = argmin_l \sum_{k \in K} L(k, l)Pr(k | x)$$
+
+Con dos clases y la matriz de pérdida como en el slide anterior, esto se reduce a:
+
+$$ argmin \\{ 2P(M | x), P(B | x)  \\} $$
+
+Que implica un límite de $p = 1/3$ para predecir la clase positiva (tumor maligno). 
+
+En general, establecer funciones de pérdidas adecuadas (y pesarlas de acuerdo a la incertidumbre poseída) nos puede ayudar a tomar mejores decisiones de predicción. 
 
 ---
 ## Conclusiones
@@ -500,20 +757,23 @@ La **Programación Probabilística** resuelve algunos de los problemas práctico
 Tomados juntos, proveen una manera práctica y poderosa de resolver preguntas acerca de incertidumbre y causalidad. En particular, ayudan a disminuir el problema de **sobrecertidumbre** en las predicciones, que puede tener consecuencias catastróficas según la aplicación.
 
 ---
-class: middle, center, inverse
-background-image: url(resources/DataDayMexico.png)
-background-size: 256px
-background-position: 93% 5%
+class: inverse
 ## ¡Gracias!
 
 twitter: [@arinarmo](https://twitter.com/arinarmo), github: [arinarmo](https://github.com/arinarmo)
 
 ### Referencias
-[*Bayesian Reasoning and Machine Learning*](http://web4.cs.ucl.ac.uk/staff/D.Barber/textbook/090310.pdf) - David Barber 
-
 [*Bayesian Methods for Hackers*](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers) - Cameron Davidson-Pilon
 
 [*Probabilistic Programming*](http://blog.fastforwardlabs.com/2017/01/30/the-algorithms-behind-probabilistic-programming.html) - Fast Forward Labs
+
+[*Bayesian Reasoning and Machine Learning*](http://web4.cs.ucl.ac.uk/staff/D.Barber/textbook/090310.pdf) - David Barber 
+
+[*Weakly Informative Priors*](https://arxiv.org/pdf/0901.4011.pdf) - Andrew Gelman, _et al._
+
+[*Bayesian Lasso*](http://www.stat.ufl.edu/archived/casella/Papers/Lasso.pdf) - Trevor Park, _et al._
+
+[*Nuclear Feature Extraction for Breast Tumor Diagnosis*](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.56.707&rep=rep1&type=pdf) - W. Nick Street, _et al._
 
 .footnote[ 
   [Repositorio con la plática](http://github.com/arinarmo/love_uncertainty): arinarmo/love_uncertainty 
